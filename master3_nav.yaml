@@ -1,0 +1,24 @@
+
+repositories:
+  master3:
+    type: git
+    url: https://github.com/cord-burmeister/master3.git
+    version: main
+  ros_gz:
+    type: git
+    url: https://github.com/gazebosim/ros_gz.git
+    version: humble
+  sdformat_urdf:
+    type: git
+    url: https://github.com/ros/sdformat_urdf.git
+    version: humble
+  aws-robomaker-small-house-world:
+    type: git
+    url: https://github.com/cord-burmeister/aws-robomaker-small-house-world.git
+    version: ros2
+  m-explore-ros2:
+    type: git
+    url: https://github.com/robo-friends/m-explore-ros2.git
+    version: main
+    
+    
