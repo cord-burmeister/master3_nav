@@ -61,12 +61,21 @@ There is a launch file which is starting the **RViz2** application to view the U
 ros2 launch master3_description display_Xacro.launch.py
 ```
 
+### Start the simulation 
+
+We start the simulation in an empty world with the following command.
+
+``` bash
+ros2 launch master3_bringup master3_drive.launch.py
+```
+
+
 ### Adding keyboard teleoperation
 
 One of the first possibilities to control a definitions of a robot is to operate it remotely with a teleoperation. There is a package which converts console input into twist messages. Note that the command with the default topic will be mapped to the robot topic.
 
 ``` bash
-ros2 run  teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=master3_drive/cmd_vel
+ros2 run  teleop_twist_keyboard teleop_twist_keyboard --ros-args 
 ```
 
 ### Adding teleoperation with X-Box One S pad
