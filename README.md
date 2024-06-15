@@ -51,7 +51,6 @@ colcon build
 . ~/master3_ws/install/setup.sh
 ```
 
-
 ## Starting commands
 
 ### Display XACRO robot description

@@ -120,13 +120,40 @@ def generate_launch_description():
         description="Run Gazebo Simulation in the headless mode",
     )
 
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time', default_value='true', description='Use simulation (Gazebo) clock if true'
+    )
+
+
     # Setup project paths
     pkg_project_bringup = get_package_share_directory('master3_bringup')
     pkg_project_gazebo = get_package_share_directory('master3_gazebo')
     pkg_project_description = get_package_share_directory('master3_description')
     package_dir = get_package_share_directory('aws_robomaker_small_house_world')
     pkg_navigation = get_package_share_directory('master3_nav2')
-    # pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
+    nav2_bringup_dir = FindPackageShare('nav2_bringup')
+     # pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
+    
+    params_file = LaunchConfiguration('params_file')
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=PathJoinSubstitution([pkg_navigation, 'config', 'nav2_params.yaml']),
+        description='Full path to the ROS2 parameters file to use for all launched nodes',
+    )
+
+    map_yaml_file = LaunchConfiguration('map')
+    map_file = PathJoinSubstitution([pkg_navigation, "maps", "map.yaml"])
+    declare_map_arg = DeclareLaunchArgument(
+        "map", default_value=map_file, description="Path to the navigation map file corresponding to the world "
+    )
+    
+    autostart = LaunchConfiguration('autostart')
+    declare_autostart_cmd = DeclareLaunchArgument(
+        'autostart',
+        default_value='true',
+        description='Automatically startup the nav2 stack',
+    )
 
     # # Setup to launch the simulator and Gazebo world
     # gz_sim = IncludeLaunchDescription(
@@ -189,20 +216,37 @@ def generate_launch_description():
          executable='ekf_node',
          name='ekf_filter_node',
          output='screen',
-         parameters=[os.path.join(pkg_navigation, 'config/ekf.yaml'), {'use_sim_time': LaunchConfiguration('use_sim_time', default=True)}]
+         parameters=[os.path.join(pkg_navigation, 'config/ekf.yaml'), {'use_sim_time': use_sim_time}]
     )
         #  parameters=[os.path.join(pkg_navigation, 'config/ekf.yaml'), {'use_sim_time': LaunchConfiguration('use_sim_time', True)}]
+
+    nav2_bringup_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([nav2_bringup_dir, 'launch', 'navigation_launch.py'])
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'params_file': params_file,
+            'map': map_yaml_file,  
+            'autostart': autostart,          
+        }.items(),
+    )
 
     return LaunchDescription([
         mecanum_launch_arg,
         declare_world_arg,
         declare_headless_arg,
+        declare_use_sim_time_cmd,      
+        declare_params_file_cmd,
+        declare_map_arg,
+        declare_autostart_cmd,
         OpaqueFunction(function=launch_setup),
         DeclareLaunchArgument('rviz', default_value=TextSubstitution(text="true"),
                                description='Open RViz.'),
         gz_spawn_entity,
         bridge,
         robot_localization_node,
+        nav2_bringup_launch,        
         # add OpaqueFunction to evaluate xacro file in context and pass to any nodes that need it
         OpaqueFunction(function=evaluate_xacro),
         rviz
