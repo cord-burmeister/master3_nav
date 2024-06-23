@@ -22,7 +22,7 @@ def generate_launch_description():
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
-        description='Automatically startup the slamtoolbox. '
+        description='Automatically startup the slam toolbox. '
                     'Ignored when use_lifecycle_manager is true.')
     declare_use_lifecycle_manager = DeclareLaunchArgument(
         'use_lifecycle_manager', default_value='false',
@@ -39,10 +39,11 @@ def generate_launch_description():
 
     start_sync_slam_toolbox_node = LifecycleNode(
         parameters=[
-          slam_params_file,
+          
           {
             'use_lifecycle_manager': use_lifecycle_manager,
-            'use_sim_time': use_sim_time
+            'use_sim_time': use_sim_time,
+            'params_file' : slam_params_file,
           }
         ],
         package='slam_toolbox',
