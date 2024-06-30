@@ -1,0 +1,33 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/marvin/master3_nav_ws/install/sdformat_urdf/include/**",
+        "/home/marvin/master3_nav_ws/install/ros_ign_interfaces/include/**",
+        "/home/marvin/master3_nav_ws/install/ros_gz_sim/include/**",
+        "/home/marvin/master3_nav_ws/install/ros_gz_bridge/include/**",
+        "/home/marvin/master3_nav_ws/install/ros_gz_interfaces/include/**",
+        "/home/marvin/master3_nav_ws/install/multirobot_map_merge/include/**",
+        "/home/marvin/master3_nav_ws/install/explore_lite/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/marvin/master3_nav_ws/src/m-explore-ros2/explore/include/**",
+        "/home/marvin/master3_nav_ws/src/m-explore-ros2/map_merge/include/**",
+        "/home/marvin/master3_nav_ws/src/master3_nav/master3_nav2/include/**",
+        "/home/marvin/master3_nav_ws/src/ros_gz/ros_gz_bridge/include/**",
+        "/home/marvin/master3_nav_ws/src/ros_gz/ros_gz_sim/include/**",
+        "/home/marvin/master3_nav_ws/src/sdformat_urdf/sdformat_urdf/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
