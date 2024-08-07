@@ -23,8 +23,8 @@ sudo apt install python3-vcstool python3-colcon-common-extensions git wget
 Then create a new workspace and load the git repositories which are required.
 
 ``` bash
-mkdir -p ~/master3_ws/src
-cd ~/master3_ws/src
+mkdir -p ~/master3_nav_ws/src
+cd ~/master3_nav_ws/src
 wget https://raw.githubusercontent.com/cord-burmeister/master3_nav/main/master3_nav.yaml
 vcs import < master3_nav.yaml
 ```
@@ -32,7 +32,7 @@ vcs import < master3_nav.yaml
 ### Install dependencies
 
 ``` bash
-cd ~/master3_ws
+cd ~/master3_nav_ws
 source /opt/ros/$ROS_DISTRO/setup.bash
 sudo rosdep init
 rosdep update
