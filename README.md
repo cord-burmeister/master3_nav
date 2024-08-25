@@ -23,8 +23,8 @@ sudo apt install python3-vcstool python3-colcon-common-extensions git wget
 Then create a new workspace and load the git repositories which are required.
 
 ``` bash
-mkdir -p ~/master3_ws/src
-cd ~/master3_ws/src
+mkdir -p ~/master3_nav_ws/src
+cd ~/master3_nav_ws/src
 wget https://raw.githubusercontent.com/cord-burmeister/master3_nav/main/master3_nav.yaml
 vcs import < master3_nav.yaml
 ```
@@ -32,7 +32,7 @@ vcs import < master3_nav.yaml
 ### Install dependencies
 
 ``` bash
-cd ~/master3_ws
+cd ~/master3_nav_ws
 source /opt/ros/$ROS_DISTRO/setup.bash
 sudo rosdep init
 rosdep update
@@ -48,7 +48,7 @@ colcon build
 ### Source the workspace
 
 ``` bash
-. ~/master3_ws/install/setup.sh
+. ~/master3_nav_ws/install/setup.sh
 ```
 
 ## Starting commands
@@ -68,8 +68,6 @@ We start the simulation in an empty world with the following command.
 ``` bash
 ros2 launch master3_bringup master3_drive.launch.py
 ```
-
-
 ### Adding keyboard teleoperation
 
 One of the first possibilities to control a definitions of a robot is to operate it remotely with a teleoperation. There is a package which converts console input into twist messages. Note that the command with the default topic will be mapped to the robot topic.
