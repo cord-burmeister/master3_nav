@@ -4,6 +4,10 @@ repositories:
     type: git
     url: https://github.com/cord-burmeister/master3.git
     version: main
+  master3_nav:
+    type: git
+    url: https://github.com/cord-burmeister/master3_nav.git
+    version: main    
   ros_gz:
     type: git
     url: https://github.com/gazebosim/ros_gz.git
@@ -20,5 +24,9 @@ repositories:
     type: git
     url: https://github.com/robo-friends/m-explore-ros2.git
     version: main
+  aws-robomaker-hospital-world:
+    type: git
+    url: https://github.com/cord-burmeister/aws-robomaker-hospital-world.git
+    version: ros2
     
     

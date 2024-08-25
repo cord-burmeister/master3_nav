@@ -25,6 +25,8 @@ Then create a new workspace and load the git repositories which are required.
 ``` bash
 mkdir -p ~/master3_nav_ws/src
 cd ~/master3_nav_ws/src
+mkdir -p ~/master3_nav_ws/src
+cd ~/master3_nav_ws/src
 wget https://raw.githubusercontent.com/cord-burmeister/master3_nav/main/master3_nav.yaml
 vcs import < master3_nav.yaml
 ```
@@ -61,7 +63,7 @@ There is a launch file which is starting the **RViz2** application to view the U
 ros2 launch master3_description display_Xacro.launch.py
 ```
 
-### Start the simulation 
+### Start the simulation
 
 We start the simulation in an empty world with the following command.
 

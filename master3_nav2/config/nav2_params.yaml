@@ -1,18 +1,31 @@
 amcl:
   ros__parameters:
     use_sim_time: True
+    # Expected process noise in odometry’s rotation estimate from rotation.
     alpha1: 0.2
+    # Expected process noise in odometry’s rotation estimate from translation.
     alpha2: 0.2
+    # Expected process noise in odometry’s translation estimate from translation.
     alpha3: 0.2
+    # Expected process noise in odometry’s translation estimate from rotation.
     alpha4: 0.2
+    # For Omni models only: translation noise.
     alpha5: 0.2
+    # Robot base frame.
     base_frame_id: "base_footprint"
+    # Ignore beams that most particles disagree with in Likelihood field model. Maximum distance to consider skipping for (m).
     beam_skip_distance: 0.5
+    # Percentage of beams after not matching map to force full update due to bad convergance.
     beam_skip_error_threshold: 0.9
+    # Percentage of beams required to skip.
     beam_skip_threshold: 0.3
+    # Whether to do beam skipping in Likelihood field model.
     do_beamskip: false
+    # The name of the coordinate frame published by the localization system.
     global_frame_id: "map"
+    # Exponential decay parameter for z_short part of model.
     lambda_short: 0.1
+    # Maximum distance to do obstacle inflation on map, for use in likelihood_field model.
     laser_likelihood_max_dist: 2.0
     laser_max_range: 100.0
     laser_min_range: -1.0
@@ -26,7 +39,10 @@ amcl:
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    # The fully-qualified type of the plugin class. Options are “nav2_amcl::DifferentialMotionModel” 
+    # and “nav2_amcl::OmniMotionModel”. Users can also provide their own custom motion model plugin type.
+    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::OmniMotionModel”"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
@@ -42,15 +58,26 @@ amcl:
 bt_navigator:
   ros__parameters:
     use_sim_time: True
+    # Reference frame.
     global_frame: map
     robot_base_frame: base_link
+    # Topic on which odometry is published
     odom_topic: /odometry/filtered
+    # Duration (in milliseconds) for each iteration of BT execution.
     bt_loop_duration: 10
+    # Default timeout value (in milliseconds) while a BT action node is waiting for
+    # acknowledgement from an action server. This value will be overwritten for a 
+    # BT node if the input port “server_timeo
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
     # nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml
     # They can be set here or via a RewrittenYaml remap from a parent launch file to Nav2.
+    # default_nav_to_pose_bt_xml: replace/with/path/to/bt.xml # or $(find-pkg-share my_package)/behavior_tree/my_nav_to_pose_bt.xml
+    # default_nav_through_poses_bt_xml: replace/with/path/to/bt.xml # or $(find-pkg-share my_package)/behavior_tree/my_nav_through_poses_bt.xml
+
+    # List of behavior tree node shared libraries. All Nav2 BT libraries are automatically
+    # included for you, so this only needs to include your new custom plugins (new to Jazzy).
     plugin_lib_names:
       - nav2_compute_path_to_pose_action_bt_node
       - nav2_compute_path_through_poses_action_bt_node
@@ -138,6 +165,10 @@ controller_server:
       yaw_goal_tolerance: 0.25
     # DWB parameters
     FollowPath:
+      # The DWB controller is the successor to the base local planner and DWA controllers in ROS 1. It was created 
+      # in ROS 1 by David Lu!! at Locus Robotics as part of the robot_navigation project. It was then ported to 
+      # ROS 2 for use in Nav2 as its critic-based controller algorithm.
+      # A highly configurable DWA implementation with plugin interfaces
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
       min_vel_x: 0.0
@@ -167,13 +198,18 @@ controller_server:
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
       stateful: True
+      # List of critic plugins to use.
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
       BaseObstacle.scale: 0.02
+      # Scale for path align critic, overriding local default.
       PathAlign.scale: 32.0
       PathAlign.forward_point_distance: 0.1
+      # Scale for goal align critic, overriding local default.
       GoalAlign.scale: 24.0
       GoalAlign.forward_point_distance: 0.1
+      # Scale for path distance critic, overriding local default.
       PathDist.scale: 32.0
+      # Scale for goal distance critic, overriding local default.
       GoalDist.scale: 24.0
       RotateToGoal.scale: 32.0
       RotateToGoal.slowing_factor: 5.0
@@ -194,7 +230,9 @@ local_costmap:
       # For the global costmap footprint, the decision to choose between the robot_radius (circular) 
       # or footprint (polygon) parameter depends on the robot, its environment, and the path planning algorithm you will use. 
       robot_radius: 0.18
+      # This is the default settings for the plugins
       plugins: ["voxel_layer", "inflation_layer"]
+      # plugins: ["voxel_layer", "stvl_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
@@ -208,7 +246,8 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: scan
+#        observation_sources: scan
+        observation_sources: scan pointcloud
         scan:
           topic: /scan
           max_obstacle_height: 2.0
@@ -219,9 +258,73 @@ local_costmap:
           raytrace_min_range: 0.08
           obstacle_max_range: 2.5
           obstacle_min_range: 0.08
+        pointcloud:  # no frame set, uses frame from message
+          topic: /depth/image_raw/points
+          # This parameter specifies the maximum height of obstacles that should be considered in the costmap.
+          # Any obstacle taller than this value won’t be inserted into the costmap.
+          # It’s essential to set this parameter appropriately based on your robot’s height and the obstacles it encounters.
+          max_obstacle_height: 1.2
+          # The min_obstacle_height parameter specifies the minimum height (in meters) of a sensor reading considered valid.
+          # Typically, this value is set to ground height, but it can be adjusted based on the noise model of the sensor.
+          # By setting this parameter, you can filter out obstacles that are too close to the ground (e.g., small rocks, debris) and focus on relevant obstacles.
+          min_obstacle_height: 0.05
+          # This parameter defines the maximum distance from the robot at which an obstacle will be inserted into the costmap. 
+          # In other words, obstacles beyond this range won’t affect the costmap.
+          obstacle_max_range: 2.5
+          # This parameter defines the minimum range at which obstacles are considered by the costmap.
+          # Any obstacles closer than this range are ignored when updating the costmap.
+          # It helps prevent false positives caused by sensor noise or reflections from nearby objects.
+          obstacle_min_range: 0.05
+          # This parameter defines the maximum range (distance) at which obstacles are considered during raytracing. 
+          # Raytracing involves checking for obstacles along sensor rays (lines of sight) from the sensor origin. 
+          # If an obstacle is detected within this range, it affects the voxel layer.
+          raytrace_max_range: 8.0
+          # This parameter defines the minimum range at which obstacles are considered. If your lidar is pitched toward the ground, 
+          # it might affect the range in the x-direction, leading to the error. Make sure this value is appropriate for your setup.
+          raytrace_min_range: 0.05
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"          
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
+      stvl_layer:
+              plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+              enabled: true
+              voxel_decay: 15.
+              decay_model: 0
+              voxel_size: 0.05
+              track_unknown_space: true
+              unknown_threshold: 15
+              mark_threshold: 0
+              update_footprint_enabled: true
+              combination_method: 1
+              origin_z: 0.0
+              publish_voxel_map: true
+              transform_tolerance: 0.2
+              mapping_mode: false
+              map_save_duration: 60.0
+              observation_sources: pointcloud
+              pointcloud:
+                data_type: PointCloud2
+                topic: /depth/image_raw/points
+                marking: true
+                clearing: true
+                obstacle_range: 3.0
+                min_obstacle_height: 0.0
+                max_obstacle_height: 2.0
+                expected_update_rate: 0.0
+                observation_persistence: 0.0
+                inf_is_valid: false
+                filter: "voxel"
+                voxel_min_points: 0
+                clear_after_reading: true
+                max_z: 7.0
+                min_z: 0.1
+                vertical_fov_angle: 0.8745
+                horizontal_fov_angle: 1.048
+                decay_acceleration: 15.0
+                model_type: 0        
       always_send_full_costmap: True
 
 global_costmap:
@@ -236,12 +339,24 @@ global_costmap:
       # or footprint (polygon) parameter depends on the robot, its environment, and the path planning algorithm you will use. 
       robot_radius: 0.18
       resolution: 0.05
+      # If false, each pixel has one of 2 states: lethal obstacle or free. If true, each pixel has one of 3 states: lethal obstacle, free, or unknown.
+      # default: false
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      # This is the default setting for the global planner plugins. 
+      # https://robotics.stackexchange.com/questions/108412/obstacle-layer-in-global-costmap-not-set
+      # Order of the plugins matters. I believe that to be the problem here. In your params you have
+      # plugins: ["static_layer", "inflation_layer", "obstacle_layer", "voxel_layer"]
+      # Which means that nav2 will first check static_layer, then run inflation on that, and after that run the costmap generation for obstacle_layer. 
+      # In the Rviz screenshot there are small grey pixels under the laser scan markings which means the obstacle_layer is doing things.
+      # To inflate the obstacle_layer detections (and voxel_layer which you might want to do as well) you have to move the 
+      # inflation_layer to be the last plugin.
+      plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
+      # To load the STVL plugin, a new plugin name and type must be added. For example, if the application required an STVL layer and no obstacle layer, our file would be:
+      # plugins: ["static_layer", "stvl_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
+        observation_sources: scan pointcloud
         scan:
           topic: /scan
           max_obstacle_height: 2.0
@@ -252,6 +367,17 @@ global_costmap:
           raytrace_min_range: 0.08
           obstacle_max_range: 2.5
           obstacle_min_range: 0.08
+        pointcloud:  # no frame set, uses frame from message
+          topic: /depth/image_raw/points
+          max_obstacle_height: 1.2
+          min_obstacle_height: 0.2
+          obstacle_max_range: 4.5
+          obstacle_min_range: 0.05
+          raytrace_max_range: 8.0
+          raytrace_min_range: 0.05
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"                  
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -259,6 +385,102 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 0.55
+      voxel_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: True
+        # Whether or not to publish the underlying voxel grid for visualization purposes.
+        publish_voxel_map: True
+        # The z origin of the map in meters.
+        origin_z: 0.0
+        # The z resolution of the map in meters/cell.
+        z_resolution: 0.05
+        # The number of voxels to in each vertical column, the height of the grid is z_resolution * z_voxels.
+        z_voxels: 16
+        max_obstacle_height: 2.0
+        mark_threshold: 0
+#        observation_sources: scan
+        observation_sources: scan pointcloud
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.08
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.08      
+        pointcloud:  # no frame set, uses frame from message
+          topic: /depth/image_raw/points
+          # This parameter specifies the maximum height of obstacles that should be considered in the costmap.
+          # Any obstacle taller than this value won’t be inserted into the costmap.
+          # It’s essential to set this parameter appropriately based on your robot’s height and the obstacles it encounters.
+          max_obstacle_height: 1.2
+          # The min_obstacle_height parameter specifies the minimum height (in meters) of a sensor reading considered valid.
+          # Typically, this value is set to ground height, but it can be adjusted based on the noise model of the sensor.
+          # By setting this parameter, you can filter out obstacles that are too close to the ground (e.g., small rocks, debris) and focus on relevant obstacles.
+          # The maximum height in meters of a sensor reading considered valid. This is usually set to be slightly higher 
+          # than the height of the robot. Setting this parameter to a value greater than the global max_obstacle_height parameter 
+          # has no effect. Setting this parameter to a value less than the global max_obstacle_height will filter out points from 
+          # this sensor above that height.
+          min_obstacle_height: 0.1
+          # The minimum height in meters of a sensor reading considered valid. This is usually set to be at ground height, 
+          # but can be set higher or lower based on the noise model of your sensor.
+          obstacle_max_range: 2.5
+          # This parameter defines the minimum range at which obstacles are considered by the costmap.
+          # Any obstacles closer than this range are ignored when updating the costmap.
+          # It helps prevent false positives caused by sensor noise or reflections from nearby objects.
+          obstacle_min_range: 0.05
+          # This parameter defines the maximum range (distance) at which obstacles are considered during raytracing. 
+          # Raytracing involves checking for obstacles along sensor rays (lines of sight) from the sensor origin. 
+          # If an obstacle is detected within this range, it affects the voxel layer.
+          raytrace_max_range: 8.0
+          # This parameter defines the minimum range at which obstacles are considered. If your lidar is pitched toward the ground, 
+          # it might affect the range in the x-direction, leading to the error. Make sure this value is appropriate for your setup.
+          raytrace_min_range: 0.05
+          # Clearing involves raytracing through a grid from the sensor origin to remove obstacle information.
+          clearing: True
+          # Marking involves changing the cost of a cell based on sensor data.
+          marking: True
+          # The data type associated with the topic, right now only "PointCloud", "PointCloud2", and "LaserScan" are supported.
+          data_type: "PointCloud2"      
+      stvl_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        enabled: true
+        voxel_decay: 15.
+        decay_model: 0
+        voxel_size: 0.05
+        track_unknown_space: true
+        unknown_threshold: 15
+        mark_threshold: 0
+        update_footprint_enabled: true
+        combination_method: 1
+        origin_z: 0.0
+        publish_voxel_map: true
+        transform_tolerance: 0.2
+        mapping_mode: false
+        map_save_duration: 60.0
+        observation_sources: pointcloud
+        pointcloud:
+          data_type: PointCloud2
+          topic: /depth/image_raw/points
+          marking: true
+          clearing: true
+          obstacle_range: 3.0
+          min_obstacle_height: 0.0
+          max_obstacle_height: 2.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"
+          voxel_min_points: 0
+          clear_after_reading: true
+          max_z: 7.0
+          min_z: 0.1
+          vertical_fov_angle: 0.8745
+          horizontal_fov_angle: 1.048
+          decay_acceleration: 15.0
+          model_type: 0
       always_send_full_costmap: True
 
 map_server:
@@ -276,6 +498,10 @@ map_saver:
     occupied_thresh_default: 0.65
     map_subscribe_transient_local: True
 
+# The NavfnPlanner is a global planner plugin for the Nav2 Planner server. It implements the Navigation Function
+#  planner with either A* or Dij. expansions. It is largely equivalent to its counterpart in ROS 1 Navigation. 
+# The Navfn planner assumes a circular robot (or a robot that can be approximated as circular for the purposes 
+# of global path planning) and operates on a weighted costmap.
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0
@@ -283,8 +509,11 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
+      # Tolerance in meters between requested goal pose and end of path.
       tolerance: 0.5
+      # Whether to use A*. If false, uses Dijkstra’s expansion.
       use_astar: false
+      # Whether to allow planning in unknown space.
       allow_unknown: true
 
 smoother_server:
