@@ -30,14 +30,17 @@ explore_node:
     # Time in seconds. When robot do not make any progress for `progress_timeout`, current goal will be abandoned.
     # default = `30.0`
     progress_timeout: 120.0
-    # Used for weighting frontiers. This multiplicative parameter affects frontier potential component of the frontier weight (distance to frontier).
+    # Used for weighting frontiers. This multiplicative parameter affects frontier potential component of the frontier
+    #  weight (distance to frontier).
     # default = `1e-3` 5.0
     # potential_scale: 0.0001
     potential_scale: 10.0
-    # Used for weighting frontiers. This multiplicative parameter affects frontier orientation component of the frontier weight. This parameter does currently nothing and is provided solely for forward compatibility.
+    # Used for weighting frontiers. This multiplicative parameter affects frontier orientation component of the frontier weight. 
+    # This parameter does currently nothing and is provided solely for forward compatibility.
     # default = `0`
     orientation_scale: 0.1
-    # Used for weighting frontiers. This multiplicative parameter affects frontier gain component of the frontier weight (frontier size).
+    # Used for weighting frontiers. This multiplicative parameter affects frontier gain component of 
+    # the frontier weight (frontier size).
     # default = `1.0`
     gain_scale: 1.0
     # Transform tolerance to use when transforming robot pose.
