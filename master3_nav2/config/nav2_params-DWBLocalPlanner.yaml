@@ -3,61 +3,60 @@
 amcl:
   ros__parameters:
     use_sim_time: True
-
-    global_frame_id: map
-    odom_frame_id: odom
+    # Expected process noise in odometry’s rotation estimate from rotation.
+    alpha1: 0.1
+    # Expected process noise in odometry’s rotation estimate from translation.
+    alpha2: 0.1
+    # Expected process noise in odometry’s translation estimate from translation.
+    alpha3: 0.1
+    # Expected process noise in odometry’s translation estimate from rotation.
+    alpha4: 0.21
+    # For Omni models only: translation noise.
+    alpha5: 0.1
+    # Robot base frame.
     base_frame_id: base_link
-    scan_topic: scan
-
-    robot_model_type: nav2_amcl::DifferentialMotionModel
-
-    set_initial_pose: true
-    always_reset_initial_pose: true
-
-    tf_broadcast: true
-    transform_tolerance: 1.0
-
-    alpha1: 0.2
-    alpha2: 0.2
-    alpha3: 0.2
-    alpha4: 0.2
-    alpha5: 0.2
-
-    # Beam skipping - ignores beams for which a majoirty of particles do not agree with the map
-    # prevents correct particles from getting down weighted because of unexpected obstacles
-    # such as humans
-    do_beamskip: false
+    # Ignore beams that most particles disagree with in Likelihood field model. Maximum distance to consider skipping for (m).
     beam_skip_distance: 0.5
+    # Percentage of beams after not matching map to force full update due to bad convergance.
     beam_skip_error_threshold: 0.9
+    # Percentage of beams required to skip.
     beam_skip_threshold: 0.3
-
+    # Whether to do beam skipping in Likelihood field model.
+    do_beamskip: false
+    # The name of the coordinate frame published by the localization system.
+    global_frame_id: "map"
+    # Exponential decay parameter for z_short part of model.
     lambda_short: 0.1
+    # Maximum distance to do obstacle inflation on map, for use in likelihood_field model.
     laser_likelihood_max_dist: 2.0
-    laser_max_range: 6.0
-    laser_min_range: 0.2
-    laser_model_type: likelihood_field
+    laser_max_range: 8.0
+    laser_min_range: -1.0
+    laser_model_type: "likelihood_field"
     max_beams: 60
-    max_particles: 500
-    min_particles: 200
-
+    max_particles: 2000
+    min_particles: 500
+    odom_frame_id: "odom"
     pf_err: 0.05
     pf_z: 0.99
-
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
-
     resample_interval: 1
+    # The fully-qualified type of the plugin class. Options are “nav2_amcl::DifferentialMotionModel” 
+    # and “nav2_amcl::OmniMotionModel”. Users can also provide their own custom motion model plugin type.
+    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
-
-    update_min_a: 0.3
-    update_min_d: 0.2
-
+    tf_broadcast: true
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.25
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-
+    scan_topic: scan
+    set_initial_pose: True
     # Setting pose (29.350000): 0.019 0.003 0.000
     initial_pose:
       x: 0.019 
@@ -148,23 +147,28 @@ bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
     use_sim_time: True
 
+# The controller_server in ROS 2’s Navigation 2 (Nav2) stack is responsible for generating command velocities for the robot to follow a given path. 
 controller_server:
   ros__parameters:
-    use_sim_time: false
-    controller_frequency: 5.0
+    use_sim_time: True
+    # controller_frequency: The frequency at which the controller runs (in Hz).
+    controller_frequency: 1.0
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.001
+    #min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
-    progress_checker_plugin: progress_checker
-    goal_checker_plugins: [general_goal_checker]   # "precise_goal_checker"
-    controller_plugins: [FollowPath]
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
+    controller_plugins: ["FollowPath"]
 
     # Progress checker parameters
     progress_checker:
-      plugin: nav2_controller::SimpleProgressChecker
+      plugin: "nav2_controller::SimpleProgressChecker"
+      # Minimum amount a robot must move to be progressing to goal (m).
       required_movement_radius: 0.5
-      movement_time_allowance: 10.0
+      # Maximum amount of time a robot has to move the minimum radius (s).
+      movement_time_allowance: 20.0
     # Goal checker parameters
     #precise_goal_checker:
     #  plugin: "nav2_controller::SimpleGoalChecker"
@@ -172,53 +176,162 @@ controller_server:
     #  yaw_goal_tolerance: 0.25
     #  stateful: True
     general_goal_checker:
-      stateful: true
-      plugin: nav2_controller::SimpleGoalChecker
-      xy_goal_tolerance: 0.2
-      yaw_goal_tolerance: 0.2
+      # Whether to check for XY position tolerance after rotating to goal orientation in case of minor localization changes.
+      #  stateful: True
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      # Tolerance to meet goal completion criteria (m).
+      xy_goal_tolerance: 0.25
+      # Tolerance to meet goal completion criteria (rad).
+      yaw_goal_tolerance: 0.3
     # DWB parameters
+    # The dwb_core::DWBLocalPlanner is a key component in the ROS2 Navigation2 (Nav2) stack, specifically within the controller_server. 
+    # This local planner is based on the Dynamic Window Approach (DWA) algorithm, which is used for local path planning and obstacle avoidance.
+    # https://www.learnros2.com/ros/navigation-and-planning/navigation2-implementation-overview/obstacle-avoidance-and-dwb-controller
+##      plugin: "dwb_core::DWBLocalPlanner"
     FollowPath:
-      plugin: dwb_core::DWBLocalPlanner
-      debug_trajectory_details: true
-      min_vel_x: 0.0
-      min_vel_y: 0.0
-      max_vel_x: 0.4
-      max_vel_y: 0.0
-      max_vel_theta: 1.0
-      min_speed_xy: 0.0
-      max_speed_xy: 0.5
-      min_speed_theta: 0.0
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      # Configuring Primary Controller¶
+      # There is one more remaining parameter of the RotationShimController not mentioned above, the primary_controller. 
+      # This is the type of controller that your application would like to use as the primary modus operandi. 
+      # It will share the same name and yaml namespace as the shim plugin. You can observe this below with 
+      # the primary controller set the DWB
+      # https://docs.nav2.org/tutorials/docs/using_shim_controller.html
+      primary_controller: "dwb_core::DWBLocalPlanner"
+      # The angular distance (in radians) apart from the robot’s current heading and the approximated path heading 
+      # to trigger the rotation behavior. Once the robot is within this threshold, control is handed over 
+      # to the primary controller plugin.
+      angular_dist_threshold: 0.785
+      #angular_dist_threshold: 0.1
+      # The distance (in meters) away from the robot to select a point on the path to approximate the path’s starting heading at. 
+      # This is analogous to a “lookahead” point.
+      #forward_sampling_distance: 1.5
+      forward_sampling_distance: 0.3
+      # The angular velocity (in rad/s) to have the robot rotate to heading by, when the behavior is enacted.
+      rotate_to_heading_angular_vel: 1.8
+      # The angular acceleration (in rad/s/s) to have the robot rotate to heading by, when the behavior is enacted.
+      max_angular_accel: 3.2
+      # The Time (s) to forward project the rotation command to check for collision
+      simulate_ahead_time: 1.0
+
+      # The DWB controller is the successor to the base local planner and DWA controllers in ROS 1. It was created 
+      # in ROS 1 by David Lu!! at Locus Robotics as part of the robot_navigation project. It was then ported to 
+      # ROS 2 for use in Nav2 as its critic-based controller algorithm.
+      # A highly configurable DWA implementation with plugin interfaces
+      # Uncomment due to usage of RotationShimController ==> plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      # Tuning Parameters: Adjusting parameters such as max_vel_x, min_vel_x, acc_lim_x, and acc_lim_theta can help your robot navigate curves more smoothly.
+      #  These parameters control the maximum and minimum velocities and acceleration limits.
+      # min_vel_x and max_vel_x: Minimum and maximum velocities in the x direction.
+      # Velocity/acceleration limits also have to be adjusted in the velocity smoother
+      min_vel_x: -2.0
+      # min_vel_y and max_vel_y: Minimum and maximum velocities in the y direction (for holonomic robots).
+      min_vel_y: -2.0
+      # min_vel_x and max_vel_x: Minimum and maximum velocities in the x direction.
+      max_vel_x: 0.20
+      # min_vel_y and max_vel_y: Minimum and maximum velocities in the y direction (for holonomic robots).
+      max_vel_y: 0.20
+      max_vel_theta: 0.7
+      # min_speed_xy and max_speed_xy: Minimum and maximum speeds in the xy plane.
+      min_speed_xy: -0.2
+      max_speed_xy: 0.2
+      min_speed_theta: 0.7
       # Add high threshold velocity for turtlebot 3 issue.
       # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
-      acc_lim_x: 1.0
-      acc_lim_y: 0.0
+      # acc_lim_x and acc_lim_y: Acceleration limits in the x and y directions.
+      acc_lim_x: 2.5
+      acc_lim_y: 2.5
+      # acc_lim_theta: Acceleration limit for rotational velocity.
       acc_lim_theta: 3.2
-      decel_lim_x: -1.0
-      decel_lim_y: 0.0
+      decel_lim_x: -2.5
+      decel_lim_y: -2.5
       decel_lim_theta: -3.2
-      vx_samples: 12
-      vy_samples: 1
-      vtheta_samples: 12
-      sim_time: 1.5
-      linear_granularity: 0.1
-      angular_granularity: 0.1
-      transform_tolerance: 0.25
-      xy_goal_tolerance: 0.2
+      vx_samples: 20
+      vy_samples: 20
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.3
+      transform_tolerance: 0.1
+      xy_goal_tolerance: 0.25
       trans_stopped_velocity: 0.25
-      short_circuit_trajectory_evaluation: true
-      stateful: true
-      critics: [RotateToGoal, Oscillation, BaseObstacle, GoalAlign, PathAlign, PathDist, GoalDist]
-      BaseObstacle.scale: 1.0
-      PathAlign.scale: 24.0
-      PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 0.1
+      short_circuit_trajectory_evaluation: True
+      stateful: True
+      # List of critic plugins to use.
+      # These plugins score the trajectories generated by the trajectory generator. 
+      # Multiple plugins can be loaded and the sum of their scores determines the chosen command velocity.
+      # * BaseObstacle - Scores a trajectory based on where the path passes over the costmap. To use this properly, 
+      #   you must use the inflation layer in costmap to expand obstacles by the robot's radius.
+      # * ObstacleFootprint - Scores a trajectory based on verifying all points along the robot's footprint 
+      #   don't touch an obstacle marked in the costmap.
+      # * GoalAlign - Scores a trajectory based on how well aligned the trajectory is with the goal pose.
+      # * GoalDist - Scores a trajectory based on how close the trajectory gets the robot to the goal pose.
+      # * PathAlign - Scores a trajectory based on how well it is aligned to the path provided by the global planner.
+      # * PathDist - Scores a trajectory based on how far it ends up from the path provided by the global planner.
+      # * PreferForward - Scores trajectories that move the robot forwards more highly
+      # * RotateToGoal - Only allows the robot to rotate to the goal orientation when it is sufficiently close 
+      #   to the goal location
+      # * Oscillation - Prevents the robot from just moving backwards and forwards.
+      # * Twirling - Prevents holonomic robots from spinning as they make their way to the goal.
+      # critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist" , "ObstacleFootprint", "Twirling" ] 
+      #critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist", "ObstacleFootprint" ] 
+      # This setting get stuck in the pampa critics: ["BaseObstacle", "ObstacleFootprint", "GoalAlign", "GoalDist", "PathAlign", "PathDist", "RotateToGoal", "Oscillation"]
+      critics: ["BaseObstacle", "ObstacleFootprint", "PathAlign", "PathDist", "Oscillation"]
+      # RotateToGoalCritic ---------------
+      # Only allows the robot to rotate to the goal orientation when it is sufficiently close to the goal location.
+      # Weighed scale for critic.
+      RotateToGoal.scale: 1.0
+      # Factor to slow robot motion by while rotating to goal.
+      RotateToGoal.slowing_factor: 5.0
+      # If > 0, amount of time to look forward for a collision for.
+      RotateToGoal.lookahead_time: 1.0
+      # Tolerance to meet goal completion criteria (m).
+      # RotateToGoal.xy_goal_tolerance: 0.25
+      # Velocity below is considered to be stopped at tolerance met (rad/s).
+      # RotateToGoal.trans_stopped_velocity: 0.25
+      # OscillationCritic  ---------------
+      # Prevents the robot from just moving backwards and forwards.
+      # Weighed scale for critic.
+      Oscillation.scale: 10.0
+      # Threshold to check in the X velocity direction.
+      Oscillation.x_only_threshold: 0.05
+      # Duration when a reset may be called. If -1, cannot be reset..
+      Oscillation.oscillation_reset_time: 10.0
+      # Minimum angular distance to move to reset watchdog (rad).
+      Oscillation.oscillation_reset_angle: 0.2
+      # Minimum distance to move to reset oscillation watchdog (m).
+      Oscillation.oscillation_reset_dist: 0.05
+      # BaseObstacleCritic ---------------
+      # Scores a trajectory based on where the path passes over the costmap. To use this properly, you must use the inflation
+      #  layer in costmap to expand obstacles by the robot’s radius.
+      BaseObstacle.scale: 0.02
+      # GoalAlignCritic ---------------
+      # Scores a trajectory based on how well aligned the trajectory is with the goal pose.
+      # Scale for goal align critic, overriding local default.
+      # Weighed scale for critic.
+      GoalAlign.scale: 1.0
+      # Point in front of robot to look ahead to compute angular change from.
       GoalAlign.forward_point_distance: 0.1
+      # PathAlignCritic ---------------
+      # Scores a trajectory based on how well it is aligned to the path provided by the global planner.      
+      # Scale for path align critic, overriding local default.
+      PathAlign.scale: 32.0
+      # Point in front of robot to look ahead to compute angular change from.
+      PathAlign.forward_point_distance: 0.2
+      # PathDistCritic
+      # Scores a trajectory based on how well it is aligned to the path provided by the global planner.
+      # Scale for path distance critic, overriding local default.
       PathDist.scale: 32.0
-      GoalDist.scale: 0.1
-      RotateToGoal.scale: 0.02
-      RotateToGoal.slowing_factor: 1.3
-      RotateToGoal.lookahead_time: -1.0
-    
+      # GoalDistCritic ---------------
+      # Scores a trajectory based on how close the trajectory gets the robot to the goal pose.      
+      # Scale for goal distance critic, overriding local default.
+      GoalDist.scale: 1.0
+      # ObstacleFootprintCritic ---------------
+      # Scores a trajectory based on verifying all points along the robot’s footprint don’t touch an obstacle marked in the costmap.
+      ObstacleFootprintCritic.scale: 32.0
+      # TwirlingCritic ---------------
+      # Prevents holonomic robots from spinning as they make their way to the goal.
+      Twirling.scale: 0.5
 
 local_costmap:
   local_costmap:
@@ -236,23 +349,8 @@ local_costmap:
       # or footprint (polygon) parameter depends on the robot, its environment, and the path planning algorithm you will use. 
       robot_radius: 0.18
       # This is the default settings for the plugins
-      plugins: ["voxel_layer", "obstacle_layer", "inflation_layer"]
-          # plugins: ["voxel_layer", "stvl_layer", "inflation_layer"]
-      obstacle_layer:
-            plugin: nav2_costmap_2d::ObstacleLayer
-            enabled: true
-            observation_sources: scan
-            scan:
-              topic: /scan
-              max_obstacle_height: 2.0
-              clearing: true
-              marking: true
-              data_type: LaserScan
-              raytrace_max_range: 3.0
-              raytrace_min_range: 0.0
-              obstacle_max_range: 2.5
-              obstacle_min_range: 0.0
-
+      plugins: ["voxel_layer", "inflation_layer"]
+      # plugins: ["voxel_layer", "stvl_layer", "inflation_layer"]
       # http://wiki.ros.org/costmap_2d
       # Inflation is the process of propagating cost values out from occupied cells that decrease with distance.
       #  For this purpose, we define 5 specific symbols for costmap values as they relate to a robot.      
@@ -284,7 +382,7 @@ local_costmap:
         # where costmap_2d::INSCRIBED_INFLATED_OBSTACLE is currently 254. 
         # NOTE: since the cost_scaling_factor is multiplied by a negative in the formula, increasing the factor will decrease the resulting cost values.
         # cost_scaling_factor: 3.0
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 1.0
         inflation_radius: 0.55 # The radius in meters to which the map inflates obstacle cost values
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
@@ -292,10 +390,7 @@ local_costmap:
         # set the publish_voxel_map parameter to True to enable the publishing of the 3D voxel grid. 
         publish_voxel_map: True
 #        publish_voxel_map: False 
-        # parent ="base_footprint" child ="base_link" dz =  0.0815
-        # parent="base_link" child="camera_link ==> dz = 0.03755
-        # parent="base_link" child="camera_link ==> dz = 0.03755
-        origin_z: 0.11905
+        origin_z: 0.0
         z_resolution: 0.05 # The resolution of the voxels in height is defined using the z_resolution parameter, while the num
         z_voxels: 16 # the number of voxels in each column is defined using the z_voxels parameter.
         max_obstacle_height: 2.0
