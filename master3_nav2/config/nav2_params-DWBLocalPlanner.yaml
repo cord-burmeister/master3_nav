@@ -383,7 +383,7 @@ local_costmap:
         # NOTE: since the cost_scaling_factor is multiplied by a negative in the formula, increasing the factor will decrease the resulting cost values.
         # cost_scaling_factor: 3.0
         cost_scaling_factor: 1.0
-        inflation_radius: 0.55 # The radius in meters to which the map inflates obstacle cost values
+        inflation_radius: 0.18 # The radius in meters to which the map inflates obstacle cost values
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -543,7 +543,7 @@ global_costmap:
         # Exponential decay factor across inflation radius.
         cost_scaling_factor: 3.0
         # Radius to inflate costmap around lethal obstacles.
-        inflation_radius: 0.55
+        inflation_radius: 0.18
         # Whether to inflate unknown cells as if lethal.
         # inflate_unknown: false
         # Whether to inflate unknown cells.
