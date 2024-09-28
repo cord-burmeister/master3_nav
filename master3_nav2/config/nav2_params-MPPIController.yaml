@@ -98,7 +98,7 @@ controller_server:
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
       # The minimum distance (in meters) that the robot must move to be considered making progress. The default value is 0.5 meters
-      required_movement_radius: 0.5
+      required_movement_radius: 0.15
       # The maximum time (in seconds) allowed for the robot to move the required distance. The default value is 10 seconds1.
       movement_time_allowance: 20.0
     # Goal checker parameters
@@ -112,11 +112,26 @@ controller_server:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
+    # The most common parameters you might want to start off changing are the velocity profiles (vx_max, vx_min, wz_max, and vy_max if holonomic) 
+    # and the motion_model to correspond to your vehicle. Its wise to consider the prune_distance of the path plan in proportion to your maximum 
+    # velocity and prediction horizon. The only deeper parameter that will likely need to be adjusted for your particular settings is the Obstacle critics’ 
+    # repulsion_weight since the tuning of this is proprtional to your inflation layer’s radius. Higher radii should correspond to reduced repulsion_weight 
+    # due to the penalty formation (e.g. inflation_radius - min_dist_to_obstacle). If this penalty is too high, the robot will slow significantly 
+    # when entering cost-space from non-cost space or jitter in narrow corridors. It is noteworthy, but likely not necessary to be changed, 
+    # that the Obstacle critic may use the full footprint information if consider_footprint = true, though comes at an increased compute cost.      
+    # Prediction Horizon, Costmap Sizing, and Offsets
+    # As this is a predictive planner, there is some relationship between maximum speed, prediction times, and costmap size that users should keep
+    #  in mind while tuning for their application. If a controller server costmap is set to 3.0m in size, that means that with the robot in the center, 
+    # there is 1.5m of information on either side of the robot. When your prediction horizon (time_steps * model_dt) at maximum speed (vx_max) is larger than this, 
+    # then your robot will be artificially limited in its maximum speeds and behavior by the costmap limitation. 
+    # For example, if you predict forward 3 seconds (60 steps @ 0.05s per step) at 0.5m/s maximum speed, the minimum required costmap radius is 1.5m - or 3m total width.
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       # Default 56. Number of time steps (points) in each sampled trajectory
       time_steps: 56
       # Default: 0.05. Time interval (s) between two sampled points in trajectories.
+      # The model_dt parameter generally should be set to the duration of your control frequency. So if your control frequency is 20hz, 
+      # this should be 0.05. However, you may also set it lower but not larger.
       model_dt: 0.05
       # Default 1000. Count of randomly sampled candidate trajectories
       batch_size: 2000
@@ -135,7 +150,7 @@ controller_server:
       # Default 0.4. Sampling standard deviation for Wz
       # This parameter controls the standard deviation for the angular velocity sampling. By adjusting this, you can influence 
       # how much rotational variation is considered during trajectory sampling.
-      wz_std: 1.8
+      wz_std: 3.2
       # Default 0.5. Max VX (m/s)
       vx_max: 0.5
       # Default -0.35. Min VX (m/s)
@@ -158,6 +173,9 @@ controller_server:
       # Default: DiffDrive. Type of model [DiffDrive, Omni, Ackermann].
       motion_model: "DiffDrive"
       # Default: false. Publish visualization of trajectories, which can slow down the controller significantly. Use only for debugging.
+      # Visualization of the trajectories using visualize uses compute resources to back out trajectories for visualization and therefore slows compute time. 
+      # It is not suggested that this parameter is set to true during a deployed use, but is a useful debug instrument while tuning the system, 
+      # but use sparingly. Visualizing 2000 batches @ 56 points at 30 hz is a lot.
       visualize: true
       # 	Default false. Whether to regenerate noises each iteration or use single noise distribution computed on initialization and reset. 
       # Practically, this is found to work fine since the trajectories are being sampled stochastically from a normal distribution and 
@@ -245,7 +263,10 @@ controller_server:
         # Default 3.0. Weight to apply to critic term.
         cost_weight: 3.0
         # Default 0.5. Minimal distance between robot and goal above which angle goal cost considered.
-        threshold_to_consider: 0.5
+        # There is a correlation to the goal checker, becasue it might rotate to the target angle too aggressivly
+        # outside the    general_goal_checker:  xy_goal_tolerance: 0.25 distance when rotating parameter wz_std: 3.2
+        # has high values. Setting this below tolerance
+        threshold_to_consider: 0.2
       # ----------------------------------------------------------------------------------------------------
       # This critic incentivizes moving in the forward direction, rather than reversing.
       PreferForwardCritic:
@@ -295,7 +316,7 @@ controller_server:
         # to evaluate each point and computationally expensive.
         trajectory_point_step: 4
         # Distance (m) between robot and goal to stop considering path alignment and allow goal critics to take over.
-        threshold_to_consider: 0.5
+        threshold_to_consider: 1.4
         # Checks that the candidate trajectories are sufficiently far along their way tracking the path to apply the alignment critic. 
         # This ensures that path alignment is only considered when actually tracking the path, preventing awkward initialization motions 
         # preventing the robot from leaving the path to achieve the appropriate heading.
