@@ -199,7 +199,7 @@ controller_server:
         time_step: 3
       AckermannConstraints:
         # minimum turning radius for ackermann motion model
-        min_turning_r: 0.2
+        min_turning_r: 0.5
       # Default: None. Critics (plugins) names
       critics: [
         "ConstraintCritic", "CostCritic", "GoalCritic",
